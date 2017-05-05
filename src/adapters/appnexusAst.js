@@ -12,6 +12,7 @@ const VIDEO_TARGETING = ['id', 'mimes', 'minduration', 'maxduration',
   'startdelay', 'skippable', 'playback_method', 'frameworks'];
 const USER_PARAMS = ['age', 'external_uid', 'segments', 'gender', 'dnt',
   'language'];
+const NATIVE_MAPPING = {body: 'description', image: 'main_image'};
 
 /**
  * Bidder adapter for /ut endpoint. Given the list of all ad unit tag IDs,
@@ -77,8 +78,18 @@ function AppnexusAstAdapter() {
         }
 
         if (bid.mediaType === 'native') {
-          tag.native = {};
-          tag.native.layouts = [bid.nativeParams];
+          tag.ad_types = ["native"];
+
+          if (bid.nativeParams) {
+            const nativeRequest = {};
+
+            Object.keys(bid.nativeParams).forEach(key => {
+              let requestKey = NATIVE_MAPPING[key] || key;
+              nativeRequest[requestKey] = bid.nativeParams[key]
+            });
+
+            tag.native = {layouts: [nativeRequest]};
+          }
         }
 
         if (bid.mediaType === 'video') {
@@ -306,8 +317,8 @@ function AppnexusAstAdapter() {
         const native = ad.rtb.native;
         bid.native = {
           title: native.title,
-          body: native.description,
-          sponsored_by: native.sponsored_by,
+          body: native.desc,
+          sponsored_by: native.sponsored,
           image: native.main_img && native.main_img.url,
           icon: native.icon && native.icon.url,
           click_url: native.link.url,
